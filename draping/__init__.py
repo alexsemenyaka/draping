@@ -1,7 +1,7 @@
 
 
 """
-draping: Some description, maybe?
+draping: Apply and remove decorators to the fumctions (both sync and async) on-fly
 """
 
 import importlib.metadata

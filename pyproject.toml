@@ -1,7 +1,7 @@
 [project]
 name = "draping"
 version = "0.1.0"
-description = ""
+description = "Apply and remove decorators to the fumctions (both sync and async) on-fly"
 authors = [
     { name = "Alex Semenyaka", email = "alex.semenyaka@gmail.com" },
 ]
