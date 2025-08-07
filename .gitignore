@@ -22,5 +22,6 @@ TODO.txt
 .venv/
 tmp/
 *.log
+*.swp
 requirements.txt.tmp
 requirements.in
