@@ -205,6 +205,98 @@ redecorate(
 
 ---
 
+### Helpers
+
+These helper functions are designed to filter callables (functions or methods) from a class or a list/tuple of callables based on their names. They are particularly useful for selecting specific subsets of methods to decorate, undecorate, or redecorate dynamically. Each helper returns a tuple of filtered callables, which can be unpacked directly into functions like `decorate()`, `undecorate()`, or `redecorate()`.
+
+Unlike other modules that provide a single, monolithic function with many arguments to decorate an entire class (which can be inflexible and hard to compose), these helpers are stackable. You can chain them together to build complex filters step-by-step, applying multiple criteria sequentially for precise control.
+
+All helpers share a common API:
+
+- **`obj`**: A class (to extract its callable attributes, excluding dunder methods like `__init__`) or a list/tuple of callables.
+- **`*args`**: One or more strings representing prefixes, substrings, or regex patterns (depending on the helper).
+- **Returns**: A tuple of filtered callables. If no `*args` are provided, returns an empty tuple (for positive filters) or all callables (for negative filters).
+
+#### `start_with()`
+
+Filters callables whose names start with any of the given prefixes.
+
+```python
+start_with(obj: Any, *prefixes: str) -> tuple[Callable, ...]
+```
+
+#### `not_start_with()`
+
+Filters callables whose names do not start with any of the given prefixes.
+
+```python
+not_start_with(obj: Any, *prefixes: str) -> tuple[Callable, ...]
+```
+
+#### `contain()`
+
+Filters callables whose names contain any of the given substrings.
+
+```python
+contain(obj: Any, *substrings: str) -> tuple[Callable, ...]
+```
+
+#### `not_contain()`
+
+Filters callables whose names do not contain any of the given substrings.
+
+```python
+not_contain(obj: Any, *substrings: str) -> tuple[Callable, ...]
+```
+
+#### `positive_re()`
+
+Filters callables whose names match any of the given regex patterns (using re.search).
+
+```python
+positive_re(obj: Any, *patterns: str) -> tuple[Callable, ...]
+```
+
+#### `negative_re()`
+
+Filters callables whose names do not match any of the given regex patterns (using re.search).
+
+```python
+negative_re(obj: Any, *patterns: str) -> tuple[Callable, ...]
+```
+
+**Direct Integration Example**
+
+Apply a decorator to all methods in `MyClass` that start with "add" or "pay":
+
+```python
+class MyClass:
+    def add_user(self): pass
+    def pay_bill(self): pass
+    def report_error(self): pass
+
+decorate(my_decorator, *start_with(MyClass, "add", "pay"))
+# Applies to add_user and pay_bill
+```
+
+**Chaining Example**
+
+Start with all methods in `MyClass` (excluding dunders), exclude those starting with "\_", then exclude those containing "test", and finally select those containing "pay":
+```python
+filtered = contains(
+               not_contains(
+                   not_start_with(MyClass, "_"),
+                   "test"
+               ),
+               "pay"
+)
+
+decorate(my_decorator, *filtered)
+# Applies only to methods like pay_bill that match the chain
+```
+
+This stackable approach allows for flexible, composable filtering without cluttering a single function call with too many conflicting options.
+
 ## <a id='caveats'>Caveats</a>
 
 ### The `from ... import ...` Rule: Patching the Source, Not the Local Copy

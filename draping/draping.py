@@ -1,10 +1,12 @@
 """
 draping: Apply and remove decorators to the fumctions (both sync and async) on-fly
 """
+import sys
+import re
 import functools
 import inspect
-import sys
 import threading
+
 from typing import Any, Callable, Optional
 
 
@@ -288,3 +290,91 @@ def undecorate(
         if raise_on_error:
             raise
         return False
+
+def _get_callables(obj: Any) -> tuple[Callable, ...]:
+    if inspect.isclass(obj):
+        return tuple(getattr(obj, name) for name in dir(obj)
+                     if callable(getattr(obj, name)) and not name.startswith("__"))
+    elif isinstance(obj, (list, tuple)):
+        return tuple(f for f in obj if callable(f))
+    raise TypeError("First argument must be a class or a list/tuple of callables.")
+
+def start_with(obj: Any, *prefixes: str) -> tuple[Callable, ...]:
+    """Filters callables whose names start with any of the given prefixes.
+
+    Args:
+        obj: A class (to extract its methods) or a list/tuple of callables.
+        *prefixes: One or more string prefixes to match.
+
+    Returns:
+        A tuple of filtered callables.
+    """
+    callables = _get_callables(obj)
+    return tuple(f for f in callables if any(f.__name__.startswith(p) for p in prefixes))
+
+def not_start_with(obj: Any, *prefixes: str) -> tuple[Callable, ...]:
+    """Filters callables whose names do not start with any of the given prefixes.
+
+    Args:
+        obj: A class (to extract its methods) or a list/tuple of callables.
+        *prefixes: One or more string prefixes to exclude.
+
+    Returns:
+        A tuple of filtered callables.
+    """
+    callables = _get_callables(obj)
+    return tuple(f for f in callables if not any(f.__name__.startswith(p) for p in prefixes))
+
+def contains(obj: Any, *substrings: str) -> tuple[Callable, ...]:
+    """Filters callables whose names contain any of the given substrings.
+
+    Args:
+        obj: A class (to extract its methods) or a list/tuple of callables.
+        *substrings: One or more substrings to match.
+
+    Returns:
+        A tuple of filtered callables.
+    """
+    callables = _get_callables(obj)
+    return tuple(f for f in callables if any(s in f.__name__ for s in substrings))
+
+def not_contains(obj: Any, *substrings: str) -> tuple[Callable, ...]:
+    """Filters callables whose names do not contain any of the given substrings.
+
+    Args:
+        obj: A class (to extract its methods) or a list/tuple of callables.
+        *substrings: One or more substrings to exclude.
+
+    Returns:
+        A tuple of filtered callables.
+    """
+    callables = _get_callables(obj)
+    return tuple(f for f in callables if not any(s in f.__name__ for s in substrings))
+
+def positive_re(obj: Any, *patterns: str) -> tuple[Callable, ...]:
+    """Filters callables whose names match any of the given regex patterns.
+
+    Args:
+        obj: A class (to extract its methods) or a list/tuple of callables.
+        *patterns: One or more regex patterns (as strings) to match.
+
+    Returns:
+        A tuple of filtered callables.
+    """
+    callables = _get_callables(obj)
+    compiled = [re.compile(p) for p in patterns]
+    return tuple(f for f in callables if any(c.search(f.__name__) for c in compiled))
+
+def negative_re(obj: Any, *patterns: str) -> tuple[Callable, ...]:
+    """Filters callables whose names do not match any of the given regex patterns.
+
+    Args:
+        obj: A class (to extract its methods) or a list/tuple of callables.
+        *patterns: One or more regex patterns (as strings) to exclude.
+
+    Returns:
+        A tuple of filtered callables.
+    """
+    callables = _get_callables(obj)
+    compiled = [re.compile(p) for p in patterns]
+    return tuple(f for f in callables if not any(c.search(f.__name__) for c in compiled))
