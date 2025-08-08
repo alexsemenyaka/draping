@@ -83,6 +83,66 @@ greet("World")
 # > Hello, World!
 ```
 
+or
+
+```python
+# import everything...
+from draping import decorate, redecorate, undecorate
+from typing import Callable
+import functools
+
+# defining things to play with
+def r(x):
+    print(f'From inside: {x=}')
+def deco_factory(name: str) -> Callable:
+    """
+    This factory creates a decorator that prints its name when called
+    """
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            print(f"    (Decorator '{name}' entering)")
+            y = func(*args, **kwargs)
+            print(f"    (Decorator '{name}' leaving)")
+            return y
+        return wrapper
+    return decorator
+
+d1=deco_factory("D1")
+d2=deco_factory("D2")
+
+## Playing now
+
+r(8)
+# 'From inside: x=8'
+
+decorate(d1, r)
+# (True,)
+
+r(8)
+"""
+    (Decorator 'D1' entering)
+From inside: x=8
+    (Decorator 'D1' leaving)
+"""
+
+>>> redecorate(d1,d2,r)
+# (True,)
+
+>>> r(8)
+"""
+    (Decorator 'D2' entering)
+From inside: x=8
+    (Decorator 'D2' leaving)
+"""
+
+undecorate(r)
+# True
+
+r(8)
+# 'From inside: x=8;
+```
+
 ---
 
 ## API Reference & Examples
