@@ -283,8 +283,8 @@ decorate(my_decorator, *start_with(MyClass, "add", "pay"))
 
 Start with all methods in `MyClass` (excluding dunders), exclude those starting with "\_", then exclude those containing "test", and finally select those containing "pay":
 ```python
-filtered = contains(
-               not_contains(
+filtered = contain(
+               not_contain(
                    not_start_with(MyClass, "_"),
                    "test"
                ),

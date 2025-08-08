@@ -325,7 +325,7 @@ def not_start_with(obj: Any, *prefixes: str) -> tuple[Callable, ...]:
     callables = _get_callables(obj)
     return tuple(f for f in callables if not any(f.__name__.startswith(p) for p in prefixes))
 
-def contains(obj: Any, *substrings: str) -> tuple[Callable, ...]:
+def contain(obj: Any, *substrings: str) -> tuple[Callable, ...]:
     """Filters callables whose names contain any of the given substrings.
 
     Args:
@@ -338,7 +338,7 @@ def contains(obj: Any, *substrings: str) -> tuple[Callable, ...]:
     callables = _get_callables(obj)
     return tuple(f for f in callables if any(s in f.__name__ for s in substrings))
 
-def not_contains(obj: Any, *substrings: str) -> tuple[Callable, ...]:
+def not_contain(obj: Any, *substrings: str) -> tuple[Callable, ...]:
     """Filters callables whose names do not contain any of the given substrings.
 
     Args:
