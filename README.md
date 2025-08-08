@@ -251,4 +251,4 @@ print(f"Success: {success}") # Fails as expected
 bad_function() # Still has the decorator message
 ```
 
-This is why using `@functools.wraps` is a critical best practice when writing decorators in Python. It ensures that your decorators play nicely with other tools (like debuggers, documentation generators, and your draping module) that rely on introspection.
+This is why using `@functools.wraps` is a critical best practice when writing decorators in Python. It ensures that your decorators play nicely with other tools (like debuggers, documentation generators, and the `draping` module) that rely on introspection.
