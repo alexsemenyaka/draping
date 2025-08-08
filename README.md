@@ -27,7 +27,7 @@ But sometimes you need to do something more sophisticated. For example, one day,
 Of course, these are entirely feasible tasks, and Python's power and flexibility make it easy to solve them. In theory. But as a rule, when they arise, you don't have much time to solve them.
 That's why I wrote this module. It allows you to decorate the necessary functions 'on the fly', in a single line, at the moment you need it. Conversely, you can remove the decoration at any time (the standard syntax does not provide this option). What's more, you can replace one decorator with another if the first one is applied to a given function.
 These are not features you need every day. But when you do need them, you can take advantage of the flexibility of this module to solve your problems as elegantly and efficiently as possible.
-It should be noted, however, that the undecorate() and redecorate() functions require a ‘standard’ decorator structure and will not work with ‘bad’ decorators (see the [Caveats](Caveats) section).
+It should be noted, however, that the undecorate() and redecorate() functions require a ‘standard’ decorator structure and will not work with ‘bad’ decorators (see the [Caveats](caveats) section).
 
 ## Features
 
