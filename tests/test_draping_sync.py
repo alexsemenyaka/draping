@@ -172,3 +172,18 @@ class TestDrapingSync:
         """
         not_a_function = 123  # An integer is not callable
         dummy_decorator = lambda f: f
+
+        # For decorate
+        with pytest.raises(TypeError):
+            decorate(dummy_decorator, not_a_function)
+        assert decorate(dummy_decorator, not_a_function, raise_on_error=False) == (False,)
+
+        # For redecorate
+        with pytest.raises(TypeError):
+            redecorate(dummy_decorator, dummy_decorator, not_a_function)
+        assert redecorate(dummy_decorator, dummy_decorator, not_a_function, raise_on_error=False) == (False,)
+
+        # For undecorate
+        with pytest.raises(TypeError):
+            undecorate(not_a_function)
+        assert undecorate(not_a_function, raise_on_error=False) is False
