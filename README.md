@@ -27,7 +27,7 @@ But sometimes you need to do something more sophisticated. For example, one day,
 Of course, these are entirely feasible tasks, and Python's power and flexibility make it easy to solve them. In theory. But as a rule, when they arise, you don't have much time to solve them.
 That's why I wrote this module. It allows you to decorate the necessary functions 'on the fly', in a single line, at the moment you need it. Conversely, you can remove the decoration at any time (the standard syntax does not provide this option). What's more, you can replace one decorator with another if the first one is applied to a given function.
 These are not features you need every day. But when you do need them, you can take advantage of the flexibility of this module to solve your problems as elegantly and efficiently as possible.
-
+It should be noted, however, that the undecorate() and redecorate() functions require a ‘standard’ decorator structure and will not work with ‘bad’ decorators (see the [Caveats](Caveats) section).
 
 ## Features
 
@@ -149,7 +149,7 @@ redecorate(
 
 ### The `from ... import ...` Rule: Patching the Source, Not the Local Copy
 
-A common pitfall when monkey-patching is trying to modify a function that has been imported directly into the local namespace using `from module import function`.
+A common pitfall when monkey-patching (and that;s what we do here) is trying to modify a function that has been imported directly into the local namespace using `from module import function`.
 
 To correctly patch an imported function, you must always **import the module itself and patch the function on the module object**.
 
@@ -159,7 +159,7 @@ This will report success (`True`) but will not actually affect the call to `sin(
 
 ```python
 from math import sin
-from draping import decorate, my_decorator
+from draping import decorate
 
 # This modifies math.sin, but your local 'sin' is unaffected.
 decorate(my_decorator, sin)
@@ -174,7 +174,7 @@ This will work as expected.
 
 ```python
 import math
-from draping import decorate, my_decorator
+from draping import decorate
 
 # Patch the function on its actual parent object.
 decorate(my_decorator, math.sin)
@@ -183,3 +183,72 @@ decorate(my_decorator, math.sin)
 math.sin(3)
 ```
 
+### Unwrapped decorators
+
+Any 'standard' decorator has the internal closure decorated with `@functools.wraps`. Why so? The magic of `@functools.wraps` is that it does more than just copy the name and docstring of the original function. Its most important job is to create a special `__wrapped__` attribute on the new wrapper function, which holds a direct reference to the original function it is wrapping.
+
+Our `undecorate()` and `redecorate()` functions completely rely on this. They work by traversing this chain of `__wrapped__` attributes to figure out what the original function was and which decorators have been applied.
+
+#### What Happens Without @wraps
+
+If a decorator is written without using `@functools.wraps`, the `__wrapped__` attribute is never created. The link to the original function is lost. When `undecorate()` looks at the decorated function, it sees no `__wrapped__` attribute and has no way of knowing that there's an original function hidden inside. It will treat it as a regular function and conclude that there is nothing to undecorate.
+
+**Example**
+
+Here is a simple demonstration of the concept:
+
+```python
+import functools
+from draping import undecorate
+
+# A "good" decorator that uses @functools.wraps
+def good_decorator(func):
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        print("Good decorator is running!")
+        return func(*args, **kwargs)
+    return wrapper
+
+# A "bad" decorator that does not
+def bad_decorator(func):
+    def wrapper(*args, **kwargs):
+        print("Bad decorator is running!")
+        return func(*args, **kwargs)
+    # No @functools.wraps here!
+    return wrapper
+
+
+@good_decorator
+def good_function():
+    print("Running the good function.")
+
+@bad_decorator
+def bad_function():
+    print("Running the bad function.")
+
+
+# --- Verification ---
+
+# The good function has the __wrapped__ attribute
+print(f"Good function has __wrapped__: {hasattr(good_function, '__wrapped__')}")
+# > Good function has __wrapped__: True
+
+# The bad function does NOT
+print(f"Bad function has __wrapped__: {hasattr(bad_function, '__wrapped__')}")
+# > Bad function has __wrapped__: False
+
+
+# --- Undecorating ---
+
+print("\nAttempting to undecorate the good function...")
+success = undecorate(good_function)
+print(f"Success: {success}")
+good_function() # Now runs without the decorator message
+
+print("\nAttempting to undecorate the bad function...")
+success = undecorate(bad_function, raise_on_error=False)
+print(f"Success: {success}") # Fails as expected
+bad_function() # Still has the decorator message
+```
+
+This is why using `@functools.wraps` is a critical best practice when writing decorators in Python. It ensures that your decorators play nicely with other tools (like debuggers, documentation generators, and your draping module) that rely on introspection.
